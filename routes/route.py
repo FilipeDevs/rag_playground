@@ -2,17 +2,25 @@ import os
 from fastapi import APIRouter, File, UploadFile
 from config.database import file_collection
 from rag.manual_embedding import manual_create_embeddings
-from rag.vector_search import generate_embedding_mongo_atlas
 from rag.doc_loader_splitter import load_and_split_pdf
-from rag.vector_query import vector_search_connection
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_community.llms import HuggingFaceHub
 from dotenv import load_dotenv
+from rag_v2.vector_store import vector_search_connection
+
+from rag_v2.chain import create_chain
 
 load_dotenv()
 
 router = APIRouter()
+
+_DEFAULT_TEMPLATE = """you are the chatbot that is prepared by whispering ai
+This is the history about the user
+{history} and this is the recent conversation
+{input}
+
+"""
 
 
 @router.post("/upload")
@@ -21,10 +29,10 @@ async def upload_file(file: UploadFile = File(...)):
     with open(file.filename, "wb") as buffer:
         buffer.write(await file.read())
 
-    if(file.filename.endswith('.pdf') == False):
+    if (file.filename.endswith('.pdf') == False):
         return {"message": "Invalid file format"}
 
-    if(file_collection.find_one({"source": file.filename})):
+    if (file_collection.find_one({"source": file.filename})):
         return {"message": "File already exists"}
 
     # Load and split the file into chunks
@@ -36,13 +44,11 @@ async def upload_file(file: UploadFile = File(...)):
 
     # The documents generated from this library unfortunately don't allow to add additional fields to the documents, like user_id
     # generate_embedding_mongo_atlas(document_chunks)
-    
+
     # Remove temporary file
     os.remove(file.filename)
 
     return {"message": "File uploaded successfully"}
-
-
 
 
 @router.post("/question-answer")
@@ -65,7 +71,7 @@ async def query_document(query: str):
     )
 
     qa = RetrievalQA.from_chain_type(
-        llm= HuggingFaceHub(
+        llm=HuggingFaceHub(
             repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
         ),
         chain_type="stuff",
@@ -80,7 +86,6 @@ async def query_document(query: str):
     # print(docs["source_documents"])
 
     return {"result": docs["result"]}
-    
 
 
 @router.delete("/delete")
@@ -88,3 +93,20 @@ async def delete_file(file: str):
     file_collection.delete_many({"source": file})
     return {"message": "File deleted successfully"}
 
+
+@router.post("/chat")
+async def chat_with_bot():
+    vector_search = vector_search_connection()
+    chain = create_chain(vector_search)
+
+    # Prompt 1
+    q1 = {"input": "My name is Leon"}
+    resp1 = chain.invoke(q1)
+    print(resp1["text"])
+
+    # Prompt 2
+    q2 = {"input": "What is my name?"}
+    resp2 = chain.invoke(q2)
+    print(resp2["text"])
+
+    return {"response": "ok"}
