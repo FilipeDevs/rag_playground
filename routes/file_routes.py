@@ -2,8 +2,9 @@ import os
 from fastapi import APIRouter, File, UploadFile
 from database.database import file_collection
 from rag.loader_splitter import load_and_split_doc
-from rag.vector_db import create_vector_db
+from rag.vector_db import create_vector_db, vector_db_v2
 file_router = APIRouter()
+
 
 @file_router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -24,9 +25,22 @@ async def upload_file(file: UploadFile = File(...)):
 
     # Create embeddings for each chunk and store in database
     print("Storing and embedding chunks...")
-    create_vector_db(document_chunks, file, user_id="dummy")
+    create_vector_db(document_chunks, user_id="dummy")
+    # vector_db_v2(document_chunks)
 
     # Remove temporary file
     os.remove(file.filename)
 
     return {"message": "File uploaded successfully"}
+
+
+@file_router.delete("/files")
+async def delete_all_files():
+    file_collection.delete_many({})
+    return {"message": "All files deleted successfully"}
+
+
+@file_router.delete("/files/{file_name}")
+async def delete_file(file_name: str):
+    file_collection.delete_one({"source": file_name})
+    return {"message": f'{file_name} deleted successfully'}
