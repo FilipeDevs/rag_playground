@@ -11,9 +11,7 @@ ATLAS_VECTOR_SEARCH_INDEX_NAME = os.getenv("ATLAS_VECTOR_SEARCH_INDEX_NAME")
 
 
 def create_vector_db(document_chunks, user_id):
-    current_position = 0
     for chunk_id, doc_chunk in enumerate(document_chunks):
-        end_position = current_position + len(doc_chunk.page_content)
         emebedding = hugging_api_embeddings.embed_query(
             doc_chunk.page_content)
         metadata = doc_chunk.metadata
@@ -23,14 +21,10 @@ def create_vector_db(document_chunks, user_id):
             "chunk_id": chunk_id,
             "text": doc_chunk.page_content,
             "embedding": emebedding,
-            "start_position": current_position,
-            "end_position": end_position,
             "user_id": user_id,  # Who the document belongs to
         }
 
         file_collection.insert_one(chunk_data)
-
-        current_position = end_position
 
 
 def vector_db():
