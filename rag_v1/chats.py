@@ -1,6 +1,7 @@
 import os
 from langchain.memory import MongoDBChatMessageHistory, ConversationBufferMemory
 from dotenv import load_dotenv
+from database.database import db, alt_messages_collection
 
 load_dotenv()
 
@@ -11,8 +12,8 @@ def load_chat_memory(chat_session_id):
     message_manager = MongoDBChatMessageHistory(
         connection_string=MONGO_URI,
         session_id=chat_session_id,
-        database_name="chat_history",
-        collection_name="messages",
+        database_name=db.name,
+        collection_name=alt_messages_collection.name,
     )
 
     memory = ConversationBufferMemory(
@@ -24,14 +25,3 @@ def load_chat_memory(chat_session_id):
     )
 
     return memory
-
-
-def load_chat_memory_v2(chat_session_id) -> MongoDBChatMessageHistory:
-    message_manager = MongoDBChatMessageHistory(
-        connection_string=MONGO_URI,
-        session_id=chat_session_id,
-        database_name="chat_history",
-        collection_name="messages",
-    )
-
-    return message_manager

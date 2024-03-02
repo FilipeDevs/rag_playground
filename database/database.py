@@ -8,6 +8,10 @@ mongo_url = os.getenv("MONGO_URI")
 
 client = MongoClient(mongo_url)
 
-db = client.document_db
+db = client.rag
 
-file_collection = db["document_chunks"]
+chunks_collection = db["chunks"]
+chats_collection = db["chats"]
+messages_collection = db["messages"]
+alt_messages_collection = db["messages_alt"]
+files_collection = db["files"]
