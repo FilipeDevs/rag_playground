@@ -6,4 +6,4 @@ from .database import (
     alt_messages_collection,
 )
 
-from .vector_db import get_vector_db, insert_chunks_to_vector_db
+from .vector_db import get_vector_db, insert_chunks_to_vector_db, get_relevant_chunks

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_emmbeddings_api():
+def get_embeddings():
     return HuggingFaceInferenceAPIEmbeddings(
         api_key=os.getenv("HUGGINGFACEHUB_API_TOKEN"),
         model_name="sentence-transformers/all-MiniLM-l6-v2",

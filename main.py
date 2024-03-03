@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from routes.rag_routes_v1 import rag_router_v1
 from routes.file_routes import file_router
 from routes.rag_routes_v2 import rag_router_v2
+from routes.chat_routes import chat_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -22,3 +23,4 @@ app.add_middleware(
 app.include_router(file_router)
 app.include_router(rag_router_v1)
 app.include_router(rag_router_v2)
+app.include_router(chat_router)
