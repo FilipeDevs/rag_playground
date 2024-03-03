@@ -44,7 +44,7 @@ def get_relevant_chunks(query: str, file_ids: list[str]):
     pre_filter = {"source": {"$in": file_ids}}
 
     results = get_vector_db().similarity_search_with_score(
-        query=query, k=5, pre_filter=pre_filter
+        query=query, k=10, pre_filter=pre_filter
     )
 
     if len(results) == 0 or results[0][1] < 0.75:
