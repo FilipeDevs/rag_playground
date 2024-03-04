@@ -39,6 +39,13 @@ def get_vector_db():
     return vector_search_connection
 
 
+def get_vector_db_as_retriever(file_ids: list[str]):
+    return get_vector_db().as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": 7, "pre_filter": {"source": {"$in": file_ids}}},
+    )
+
+
 def get_relevant_chunks(query: str, file_ids: list[str]):
 
     pre_filter = {"source": {"$in": file_ids}}
@@ -65,3 +72,7 @@ def format_relevant_chunks(chunks):
 
 def get_ids_from_chunks(chunks):
     return [str(chunk.metadata["_id"]) for chunk, _score in chunks]
+
+
+def get_ids_from_chunks_without_score(chunks):
+    return [str(chunk.metadata["_id"]) for chunk in chunks]

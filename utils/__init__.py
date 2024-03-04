@@ -1,6 +1,6 @@
 from .logger import get_logger
 from .prompts import prompts, prompts_loader
-from .chunks import get_chunks_from_files
+from .chunks import get_chunks_from_files_as_docs
 from .signature import generate_file_signature
 from .loader_splitter import load_and_split_doc
 from .chats import (
