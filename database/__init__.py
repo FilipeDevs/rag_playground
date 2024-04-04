@@ -9,7 +9,4 @@ from .database import (
 from .vector_db import (
     get_vector_db,
     insert_chunks_to_vector_db,
-    get_relevant_chunks,
-    get_ids_from_chunks_without_score,
-    get_vector_db_as_retriever,
 )

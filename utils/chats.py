@@ -31,7 +31,7 @@ def get_chat_history(chat_id: str, limit=10):
     chat = chats_collection.find_one({"_id": ObjectId(chat_id)})
     messages = (
         messages_collection.find({"_id": {"$in": chat["messages"]}})
-        .sort([("date", 1)])
+        .sort([("date", -1)])
         .limit(limit)
     )
 

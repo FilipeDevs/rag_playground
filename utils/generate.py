@@ -1,74 +1,61 @@
 import time
-from langchain.retrievers import EnsembleRetriever
-from langchain_community.retrievers import BM25Retriever
-from llm.loader import get_llm
+from llm.loader import get_azure_llm
 from utils.chats import format_chat_history, get_chat_history
 from utils.prompts.prompts_loader import (
-    create_question_context_prompt,
-    create_standalone_prompt,
+    create_question_context_prompt_v2,
+    create_standalone_prompt_v2,
 )
-from utils import get_logger, get_chunks_from_files_as_docs
-from database import (
-    get_relevant_chunks,
-    get_vector_db,
-    get_vector_db_as_retriever,
-    get_ids_from_chunks_without_score,
-)
+from langchain.chains import LLMChain
+from utils.logger import get_logger
+from utils.retrievers import get_relevant_context
 
 logger = get_logger()
 
 
 def generate_follow_up_question(question, chat_history):
-    llm = get_llm()
-    standalone_prompt_formated = create_standalone_prompt(chat_history, question)
-    logger.info(f"Standalone prompt formated: \n{standalone_prompt_formated}")
-    response = llm(standalone_prompt_formated)
+    llm = get_azure_llm()
+    prompt = create_standalone_prompt_v2(chat_history, question)
+    chat_llm_chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        verbose=True,
+    )
 
-    return response
+    result = chat_llm_chain.predict(human_input=question)
+    logger.info(f"Response: {result}")
+
+    return result
 
 
 def generate_context_response(context, question):
-    llm = get_llm()
-    question_context_prompt_formated = create_question_context_prompt(context, question)
-    logger.info(
-        f"Question context prompt formated: \n{question_context_prompt_formated}"
+    llm = get_azure_llm()
+    prompt = create_question_context_prompt_v2(context)
+    chat_llm_chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        verbose=True,
     )
-    response = llm(question_context_prompt_formated)
+    result = chat_llm_chain.predict(human_input=question)
+    logger.info(f"Response: {result}")
 
-    return response
+    return result
 
 
 def generate_response(processed_question, file_ids):
+
     logger.info("Getting relevant chunks...")
 
-    candidate_chunks = get_chunks_from_files_as_docs(file_ids)
-
-    vector_embeddings_retriever = get_vector_db_as_retriever(file_ids)
-    bm25_retriever = BM25Retriever.from_documents(documents=candidate_chunks)
-    bm25_retriever.k = 3
-
-    ensemble_retriever = EnsembleRetriever(
-        retrievers=[vector_embeddings_retriever, bm25_retriever],
-        weights=[0.5, 0.5],
-    )
-
-    docs = ensemble_retriever.get_relevant_documents(query=processed_question)
-
-    chunks_ids = get_ids_from_chunks_without_score(docs)
-
-    context_text = "\n\n".join([doc.page_content for doc in docs])
-
-    # chunks, chunks_ids = get_relevant_chunks(
-    #     query=processed_question, file_ids=file_ids
-    # )
+    context_text, chunks_ids = get_relevant_context(processed_question, file_ids)
 
     logger.info("Generating response...")
+
     start_time = time.time()
     final_response = generate_context_response(
         context=context_text, question=processed_question
     )
     end_time = time.time()
     exec_time = round(end_time - start_time)
+
     logger.info(f"Response generated in {exec_time} seconds")
     logger.info(f"Response: {final_response}")
 

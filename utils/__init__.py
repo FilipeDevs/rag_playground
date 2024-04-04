@@ -16,3 +16,5 @@ from .generate import (
     generate_response,
     process_chat_history,
 )
+
+from .retrievers import get_relevant_context
